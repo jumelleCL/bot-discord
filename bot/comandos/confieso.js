@@ -1,4 +1,4 @@
-module.exports = (client, message, args) => {
+export default (client, message, args) => {
     const { MessageEmbed } = require('discord.js');
 
     let texto1 = args.slice(1).join(' ');

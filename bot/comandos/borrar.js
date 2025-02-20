@@ -1,7 +1,5 @@
-const config = require("../config");
-
-module.exports = async (client, message) => {
-    if (config.ownerIDS.includes(message.author.id)) {
+export default async (client, message, args, config) => {
+    if (config.ADMIN_ID.includes(message.author.id)) {
         try {
             let mensajes;
             

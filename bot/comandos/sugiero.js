@@ -1,6 +1,6 @@
-const { MessageEmbed } = require('discord.js');
+import { MessageEmbed } from 'discord.js';
 
-module.exports = (client, message, args) => {
+export default (client, message, args) => {
     if (!args.length) {
         return message.author.send('No puedes enviar una sugerencia vacía.');
     }

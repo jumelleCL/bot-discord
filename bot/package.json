@@ -2,8 +2,10 @@
   "name": "bot-discord",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "npx nodemon index.js"
+    "start": "npx nodemon index.js",
+    "train": "cd IA && node train.js"
   },
   "author": "",
   "license": "ISC",

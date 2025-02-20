@@ -1,8 +1,9 @@
-const Discord = require("discord.js");
-const { Client, Intents } = require("discord.js");
-const fs = require("fs");
+import { Client, Intents } from "discord.js";
+import { readdirSync } from "fs";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+import { askIA } from "./IA/index.js";
+dotenv.config();
 
 const client = new Client({
   intents: [
@@ -10,38 +11,44 @@ const client = new Client({
     Intents.FLAGS.GUILD_MESSAGES,
     Intents.FLAGS.DIRECT_MESSAGES,
   ],
-  partials: ['CHANNEL'] 
+  partials: ['CHANNEL']
 });
 
-client.config = require("./config.js");
-client.comandos = new Discord.Collection();
-
-let { readdirSync } = require("fs");
+client.comandos = new Map();
 
 for (const file of readdirSync("./comandos")) {
   if (file.endsWith(".js")) {
     let fileName = file.substring(0, file.length - 3);
-    let fileContents = require(`./comandos/${file}`);
-    client.comandos.set(fileName, fileContents);
+    let fileContents = await import(`./comandos/${file}`);
+    client.comandos.set(fileName, fileContents.default);
   }
 }
 
-for (const file of readdirSync("./eventos")) {
-  if (file.endsWith(".js")) {
-    let fileName = file.substring(0, file.length - 3);
-    let fileContents = require(`./eventos/${file}`);
-    client.on(fileName, fileContents.bind(null, client));
-    delete require.cache[require.resolve(`./eventos/${file}`)];
-  }
-}
-
-client.on("messageCreate", (message) => {
+client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  console.log(`Mensaje recibido: ${message.content}`);
+
+  const prefix = process.env.PREFIX || "Juancho";
+  
+  if (!message.content.startsWith(prefix)) return;
+
+  const commandBody = message.content.slice(prefix.length).trim();
+  const [comando, ...args] = commandBody.split(/ +/);
+
+  if (client.comandos.has(comando)) {
+    try {
+      await client.comandos.get(comando)(client, message, args, process.env);
+    } catch (err) {
+      console.error(err);
+      message.reply("Hubo un error al ejecutar el comando.");
+    }
+  } else {
+    const iaResponse = await askIA(commandBody);  
+    message.reply(`${iaResponse}`);
+  }
 });
 
 client
-  .login(client.config.token)
+  .login(process.env.TOKEN)  
   .then(() => {
     console.log(`${client.user.tag} está listo`);
   })
