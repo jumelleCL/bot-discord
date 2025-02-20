@@ -1,52 +1,42 @@
-/* 
-An event to confess something to the bot and he will say it anonymous on an especified channel.
-
-You HAVE to change the setAuthor to 'anonymous' so the bot will not tell who said the confession, or
-you can write message.author.username so it would no longer be anonymous. 
-
-Also change the confessiones variable on 'channel' to the id of the channel you would like the bot sending 
-the confession to. 
-*/
-
 module.exports = (client, message, args) => {
-
     const { MessageEmbed } = require('discord.js');
 
     let texto1 = args.slice(1).join(' ');
     let denunciado = message.client.users.cache.get(args[1]);
     let texto2 = args.slice(3).join(' ');
-    let dif1 = args[1] == 'a'
-    let dif = args[1] == 'que'
-    let confessiones = message.client.channels.cache.get('channel');
-
+    let confessiones = message.client.channels.cache.get(process.env.CONFESSION_CHANNEL_ID);
 
     let TextoConfesion = new MessageEmbed()
-    .setColor('WHITE')
-	.setTitle('NUEVA CONFESION')
-    .setAuthor(`Anonimo`)
-    .setDescription('Una persona confiesa: ' + texto1);
+        .setColor('WHITE')
+        .setTitle('NUEVA CONFESION')
+        .setAuthor('Anonimo')
+        .setDescription('Una persona confiesa: ' + texto1);
 
     let TextoConfesion1 = new MessageEmbed()
-    .setColor('WHITE')
-	.setTitle('Una persona anonima tiene una confesion para usted.')
-    .setAuthor(`${message.author.username}`)
-    .setDescription(`Le dice a ${denunciado} que: ` + texto2);
+        .setColor('WHITE')
+        .setTitle('Una persona anonima tiene una confesion para usted.')
+        .setAuthor(message.author.username)
+        .setDescription(`Le dice a ${denunciado} que: ` + texto2);
 
-    if(message.channel.type === 'dm') {
-
+    if (message.channel.type === 'DM') {
         if (args[0] == 'que') {
-            confessiones.send(TextoConfesion)
-            message.author.send('Mensaje enviado de manera anonima.')
+            confessiones.send({ embeds: [TextoConfesion] });
+            message.author.send('Mensaje enviado de manera anonima.');
         }
 
         if (args[0] == 'a') {
-            confessiones.send(TextoConfesion1)
-            message.author.send('Mensaje enviado a su dm de manera anonima')
+            confessiones.send({ embeds: [TextoConfesion1] });
+            message.author.send('Mensaje enviado a su dm de manera anonima');
         }
-
     } else {
+        if (message.channel.isText() && message.guild) {
             message.channel.bulkDelete(1)
-            message.channel.send('Para enviar confesiones anonimas mande su confesion al dm.')
+                .then(() => {
+                    message.channel.send('Para enviar confesiones anonimas mande su confesion al DM.');
+                })
+                .catch(err => console.error('Error al eliminar el mensaje:', err));
+        } else {
+            message.author.send('Para enviar confesiones anonimas mande su confesion al DM.');
         }
-
-}
+    }
+};
